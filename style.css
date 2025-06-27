@@ -27,5 +27,3 @@ pre{background:#f0f2f7;color:var(--text);padding:1rem;border-radius:var(--radius
 .fade{opacity:0;transition:opacity .25s ease}
 .fade.show{opacity:1}
 .hidden{display:none}
-
-
