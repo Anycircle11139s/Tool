@@ -1,24 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Browser Toolkit</title>
-<link rel="stylesheet" href="style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Browser Toolkit - All-in-One Tools</title>
+<link rel="icon" href="favicon.ico" type="image/x-icon" />
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <header>
-  <h1>All-in-One Browser Toolkit</h1>
-  <p>Fast, free, privacy-friendly tools — right in your browser.</p>
-  <button id="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+  <div class="container header-container">
+    <h1>Browser Toolkit</h1>
+    <p>Fast, free, and privacy-friendly tools — right in your browser.</p>
+    <button id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
+  </div>
 </header>
 
-<main id="app" class="fade"></main>
+<main class="container" id="app">
+  <!-- Dynamic content rendered by script.js -->
+</main>
 
 <footer>
-  <small>&copy; 2025 BrowserToolkit.dev • 100 % client-side</small>
+  <div class="container footer-container">
+    <p>© 2025 BrowserToolkit.dev — Made with ❤️ by You</p>
+  </div>
 </footer>
 
-<script src="script.js"></script>
+<script src="script.js" defer></script>
 </body>
 </html>
+
