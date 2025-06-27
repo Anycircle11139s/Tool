@@ -1,10 +1,9 @@
-/* ---------- helpers ---------- */
+/* ---------- Helpers ---------- */
 const $ = s => document.querySelector(s);
 const app = $('#app');
 function setHash(h) { location.hash = h; }
-const ext = src => new Promise(r => { const s = document.createElement('script'); s.src = src; s.onload = r; document.head.appendChild(s); });
 
-/* ---------- dark-mode toggle ---------- */
+/* ---------- Dark Mode Toggle ---------- */
 (() => {
   const saved = localStorage.getItem('theme');
   if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
@@ -15,150 +14,197 @@ const ext = src => new Promise(r => { const s = document.createElement('script')
   };
 })();
 
-/* ---------- tool definitions ---------- */
+/* ---------- Tools Definitions ---------- */
 const tools = {
-
-  /* ----- home ----- */
+  /* Home */
   home: {
     title: 'All Tools',
     render() {
       app.innerHTML = `
-        <input id="search" type="text" placeholder="Search tools…">
-        <section class="grid" id="grid">
+        <input id="search" type="search" placeholder="Search tools…" aria-label="Search tools" autofocus />
+        <section id="tool-list" role="list">
           ${Object.entries(tools)
             .filter(([k]) => k !== 'home')
-            .map(([k, t]) => `<a class="card" href="#${k}">${t.title}</a>`)
+            .map(([k, t]) =>
+              `<a href="#${k}" class="tool-card" role="listitem" tabindex="0" aria-label="Open ${t.title} tool">
+                ${t.icon || '🛠️'}<br>${t.title}
+              </a>`
+            )
             .join('')}
-        </section>`;
+        </section>
+      `;
       $('#search').oninput = e => {
         const q = e.target.value.toLowerCase();
-        document
-          .querySelectorAll('#grid .card')
-          .forEach(c => (c.style.display = c.textContent.toLowerCase().includes(q) ? 'block' : 'none'));
+        document.querySelectorAll('.tool-card').forEach(c => {
+          c.style.display = c.textContent.toLowerCase().includes(q) ? 'inline-flex' : 'none';
+        });
       };
       $('#search').focus();
-    }
+    },
+    icon: '🏠'
   },
 
-  /* ----- original 10 tools (unchanged) ----- */
-  json: { title: 'JSON Formatter', render() { /* …same as before… */ } },
-  qr:   { title: 'QR Code Generator', render: async function () { /* … */ } },
-  img:  { title: 'Image Compressor', render: async function () { /* … */ } },
-  unit: { title: 'Unit Converter', render() { /* … */ } },
-  text: { title: 'Text Case Changer', render() { /* … */ } },
-  b64:  { title: 'Base64 Encoder / Decoder', render() { /* … */ } },
-  url:  { title: 'URL Encoder / Decoder', render() { /* … */ } },
-  lorem:{ title: 'Lorem Ipsum Generator', render() { /* … */ } },
-  md:   { title: 'Markdown Previewer', render: async function () { /* … */ } },
-
-  /* ---------- NEW TOOLS BELOW ---------- */
-
-  pass: {
-    title: 'Password Generator',
+  /* Original 15 tools here, simplified */
+  json: {
+    title: 'JSON Formatter',
+    icon: '🗄️',
     render() {
       app.innerHTML = `
         <button class="btn" onclick="setHash('')">← Back</button><h2>${this.title}</h2>
-        <label>Length</label><input id="plen" type="number" min="4" max="64" value="12">
-        <label><input type="checkbox" id="pnums" checked> Include numbers</label>
-        <label><input type="checkbox" id="psym"  checked> Include symbols</label>
-        <button class="btn" id="make">Generate</button>
-        <input id="pwd" type="text" readonly placeholder="Your password will appear here">`;
-      $('#make').onclick = () => {
-        const len = +$('#plen').value || 12;
-        const nums = $('#pnums').checked;
-        const sym = $('#psym').checked;
-        const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        const numbers = '0123456789';
-        const symbols = '!@#$%^&*()_+[]{}';
-        let pool = letters + (nums ? numbers : '') + (sym ? symbols : '');
+        <textarea id="json-input" rows="12" placeholder="Paste JSON here..."></textarea>
+        <button class="btn" id="format-json">Format JSON</button>
+        <pre id="json-output" style="white-space: pre-wrap; margin-top: 1rem; background: var(--card-bg); padding: 1rem; border-radius: 8px; max-height: 300px; overflow: auto;"></pre>
+      `;
+      $('#format-json').onclick = () => {
+        const input = $('#json-input').value.trim();
+        let out;
+        try {
+          const parsed = JSON.parse(input);
+          out = JSON.stringify(parsed, null, 2);
+        } catch {
+          out = 'Invalid JSON!';
+        }
+        $('#json-output').textContent = out;
+      };
+    }
+  },
+
+  qr: {
+    title: 'QR Code Generator',
+    icon: '🔲',
+    async render() {
+      app.innerHTML = `
+        <button class="btn" onclick="setHash('')">← Back</button><h2>${this.title}</h2>
+        <input id="qr-text" type="text" placeholder="Enter text or URL" />
+        <button class="btn" id="gen-qr">Generate QR</button>
+        <div id="qr-container" style="margin-top:1rem;"></div>
+      `;
+
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js';
+      document.head.appendChild(script);
+      await new Promise(r => (script.onload = r));
+
+      $('#gen-qr').onclick = () => {
+        const text = $('#qr-text').value.trim();
+        if (!text) return alert('Please enter text to generate QR code.');
+        const container = $('#qr-container');
+        container.innerHTML = '';
+        QRCode.toCanvas(text, { width: 200 }, (err, canvas) => {
+          if (err) return alert('Error generating QR code.');
+          container.appendChild(canvas);
+        });
+      };
+    }
+  },
+
+  img: {
+    title: 'Image Compressor',
+    icon: '🖼️',
+    async render() {
+      app.innerHTML = `
+        <button class="btn" onclick="setHash('')">← Back</button><h2>${this.title}</h2>
+        <input id="img-file" type="file" accept="image/*" />
+        <label for="quality">Quality (1–100):</label>
+        <input id="quality" type="number" min="1" max="100" value="75" />
+        <button class="btn" id="compress-btn">Compress Image</button>
+        <div id="img-result" style="margin-top: 1rem;"></div>
+      `;
+      $('#compress-btn').onclick = () => {
+        const fileInput = $('#img-file');
+        const quality = Math.min(Math.max(+$('#quality').value, 1), 100) / 100;
+        if (!fileInput.files.length) return alert('Select an image first.');
+        const file = fileInput.files[0];
+        const img = new Image();
+        const reader = new FileReader();
+        reader.onload = e => {
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            canvas.toBlob(
+              blob => {
+                const url = URL.createObjectURL(blob);
+                $('#img-result').innerHTML = `
+                  <p>Compressed image:</p>
+                  <a href="${url}" download="compressed.jpg">Download here</a>
+                  <br><img src="${url}" alt="Compressed Image Preview" style="max-width: 100%; margin-top: 10px;" />
+                `;
+              },
+              'image/jpeg',
+              quality
+            );
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      };
+    }
+  },
+
+  unit: {
+    title: 'Unit Converter',
+    icon: '📏',
+    render() {
+      // Simplified demo: length units only
+      const units = {
+        meter: 1,
+        kilometer: 1000,
+        mile: 1609.34,
+        yard: 0.9144,
+        foot: 0.3048,
+        inch: 0.0254
+      };
+      app.innerHTML = `
+        <button class="btn" onclick="setHash('')">← Back</button><h2>${this.title}</h2>
+        <input id="unit-value" type="number" value="1" step="any" />
+        <select id="unit-from">${Object.keys(units).map(u => `<option>${u}</option>`).join('')}</select>
+        to
+        <select id="unit-to">${Object.keys(units).map(u => `<option>${u}</option>`).join('')}</select>
+        <button class="btn" id="convert-unit">Convert</button>
+        <p id="unit-result" style="font-weight:700; margin-top:1rem;"></p>
+      `;
+      $('#convert-unit').onclick = () => {
+        const val = parseFloat($('#unit-value').value);
+        const from = $('#unit-from').value;
+        const to = $('#unit-to').value;
+        if (isNaN(val)) return alert('Enter a valid number');
+        const meters = val * units[from];
+        const converted = meters / units[to];
+        $('#unit-result').textContent = `${val} ${from} = ${converted.toFixed(4)} ${to}`;
+      };
+    }
+  },
+
+  text: {
+    title: 'Text Case Changer',
+    icon: '🔠',
+    render() {
+      app.innerHTML = `
+        <button class="btn" onclick="setHash('')">← Back</button><h2>${this.title}</h2>
+        <textarea id="text-input" rows="8" placeholder="Enter text here..."></textarea>
+        <select id="case-select">
+          <option value="upper">UPPERCASE</option>
+          <option value="lower">lowercase</option>
+          <option value="title">Title Case</option>
+          <option value="sentence">Sentence case</option>
+        </select>
+        <button class="btn" id="convert-case">Convert</button>
+        <textarea id="text-output" rows="8" readonly></textarea>
+      `;
+      $('#convert-case').onclick = () => {
+        const text = $('#text-input').value;
+        const mode = $('#case-select').value;
         let out = '';
-        for (let i = 0; i < len; i++) out += pool[Math.floor(Math.random() * pool.length)];
-        $('#pwd').value = out;
-        $('#pwd').select(); document.execCommand('copy');
-      };
-    }
-  },
+        switch (mode) {
+          case 'upper': out = text.toUpperCase(); break;
+          case 'lower': out = text.toLowerCase(); break;
+          case 'title':
+            out = text.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.substr(1).toLowerCase());
+            break;
+          case 'sentence':
+            out = tex
 
-  words: {
-    title: 'Word & Character Counter',
-    render() {
-      app.innerHTML = `
-        <button class="btn" onclick="setHash('')">← Back</button><h2>${this.title}</h2>
-        <textarea id="wtext" rows="10" placeholder="Type or paste text…"></textarea>
-        <p><strong id="wcount">0</strong> words, <strong id="ccount">0</strong> characters</p>`;
-      $('#wtext').oninput = () => {
-        const t = $('#wtext').value.trim();
-        $('#ccount').textContent = t.length;
-        $('#wcount').textContent = t ? t.split(/\\s+/).length : 0;
-      };
-    }
-  },
-
-  color: {
-    title: 'Color Picker',
-    render() {
-      app.innerHTML = `
-        <button class="btn" onclick="setHash('')">← Back</button><h2>${this.title}</h2>
-        <input type="color" id="picker" value="#4f46e5" style="width:100%;height:4rem;border:none;">
-        <input type="text" id="hex" readonly style="text-align:center" value="#4f46e5">`;
-      $('#picker').oninput = e => { $('#hex').value = e.target.value.toUpperCase(); $('#hex').select(); document.execCommand('copy'); };
-    }
-  },
-
-  random: {
-    title: 'Random Number Generator',
-    render() {
-      app.innerHTML = `
-        <button class="btn" onclick="setHash('')">← Back</button><h2>${this.title}</h2>
-        <label>Min</label><input id="rmin" type="number" value="1">
-        <label>Max</label><input id="rmax" type="number" value="100">
-        <button class="btn" id="roll">Roll</button>
-        <h3 id="rout" style="margin-top:1rem"></h3>`;
-      $('#roll').onclick = () => {
-        let a = +$('#rmin').value, b = +$('#rmax').value;
-        if (a > b) [a, b] = [b, a];
-        const n = Math.floor(Math.random() * (b - a + 1)) + a;
-        $('#rout').textContent = n;
-      };
-    }
-  },
-
-  age: {
-    title: 'Age Calculator',
-    render() {
-      const today = new Date().toISOString().split('T')[0];
-      app.innerHTML = `
-        <button class="btn" onclick="setHash('')">← Back</button><h2>${this.title}</h2>
-        <label>Date of birth</label><input id="dob" type="date" max="${today}">
-        <button class="btn" id="calc">Calculate</button>
-        <h3 id="aget" style="margin-top:1rem"></h3>`;
-      $('#calc').onclick = () => {
-        const dob = new Date($('#dob').value);
-        if (!dob) return;
-        const diff = Date.now() - dob.getTime();
-        const age = new Date(diff).getUTCFullYear() - 1970;
-        $('#aget').textContent = isNaN(age) ? '' : `You are ${age} years old.`;
-      };
-    }
-  }
-};
-
-/* ---------- router ---------- */
-function render() {
-  const key = location.hash.replace('#', '') || 'home';
-  document.title = (tools[key] || tools.home).title + ' • Browser Toolkit';
-  app.classList.remove('show');
-  setTimeout(() => { (tools[key] || tools.home).render(); app.classList.add('show'); }, 100);
-}
-window.addEventListener('hashchange', render);
-window.addEventListener('load', render);
-
-/* ---------- shortcuts ---------- */
-document.addEventListener('keydown', e => {
-  if (e.key === '/' && location.hash === '') { e.preventDefault(); $('#search')?.focus(); }
-  if (e.key === 'Escape' && location.hash !== '') setHash('');
-});
-
-/* ---------- service worker ---------- */
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js'));
 
