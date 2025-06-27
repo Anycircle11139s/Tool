@@ -1,27 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Image Compressor • Browser Toolkit</title>
-  <link rel="stylesheet" href="../../style.css" />
-  <script src="https://unpkg.com/browser-image-compression@2.0.1/dist/browser-image-compression.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Browser Toolkit</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<header>
-  <h1>Image Compressor</h1>
-  <p><a href="../../index.html" style="color:#fff; text-decoration:underline;">← back</a></p>
-</header>
-<main>
-  <div class="tool-container">
-    <input id="img-input" type="file" accept="image/*" />
-    <label for="quality">Quality (0.1-1)</label>
-    <input id="quality" type="number" min="0.1" max="1" step="0.1" value="0.7" />
-    <button id="compress-btn" class="btn">Compress</button>
-    <p id="status"></p>
-    <a id="download-link" class="btn" style="display:none" download="compressed.jpg">Download compressed</a>
-  </div>
-</main>
-<footer><small>&copy; 2025 BrowserToolkit.dev</small></footer>
-<script src="script.js"></script>
+  <header>
+    <h1>All-in-One Browser Toolkit</h1>
+    <p>Fast, free, privacy-friendly tools — right in your browser.</p>
+  </header>
+
+  <!-- Home & tool content render into #app -->
+  <main id="app"></main>
+
+  <footer>
+    <small>&copy; 2025 BrowserToolkit.dev &nbsp;•&nbsp; 100 % client-side</small>
+  </footer>
+
+  <script src="script.js"></script>
 </body>
 </html>
